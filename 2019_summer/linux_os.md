@@ -6,17 +6,15 @@
 
 #### 页式内存
 
-##### [进程的虚拟地址空间](<http://0xffffff.org/2013/05/23/18-linux-process-address-space/>)
+##### [进程的虚拟地址空间](<http://0xffffff.org/2013/05/23/18-linux-process-address-space/>)	
 
-​	![process virtual adress space](http://0xffffff.org/images/18/1.png)
+![process virtual adress space](<https://github.com/shaohv/shaohv.resources/raw/master/linux_os_address_space.png>)
 
 ​	如上图所示，地址空间被分成内核空间和用户空间，应用程序通过调用系统调用进入内核，内核中通过copy_from_user将数据从用户空间拷贝到内核空间（同样还有copy_to_user），该过程参考[关于系统调用sethostname的描述](<https://www.cnblogs.com/wuchanming/p/4360277.html>)。以上是进程运行时使用的地址，实际cpu执行指令时，也是用的这个地址，称作逻辑地址。
 
 ##### 地址映射
 
-​	用户空间：如下图一句话，逻辑地址 -> (段式管理) -> 线性地址 -> (页式管理) -> 物理地址。由于linux系统实现中，每个段基址都是0，每个段的地址空间都是0～2^32-1，所以这里可忽略段机制，逻辑地址 = 线性地址。页式管理中，利用线性地址的高10位作为索引到页目录（每个进程都有页目录，保存在寄存器cr3中，进程切换时，cr3也会换成新进程的页目录地址）中找到一项，即为页表的地址；利用中间10位在页表中查找一项，其值（应该需要左移12位）加上现象地址的低12位，就得到物理地址。
-
-​	![段页式管理机制](<https://raw.githubusercontent.com/hurley25/wiki/gh-pages/_posts/picture/chapt10/ADDR_TRAN.png>)
+​	用户空间：如下图一句话，逻辑地址 -> (段式管理) -> 线性地址 -> (页式管理) -> 物理地址。由于linux系统实现中，每个段基址都是0，每个段的地址空间都是0～2^32-1，所以这里可忽略段机制，逻辑地址 = 线性地址。页式管理中，利用线性地址的高10位作为索引到页目录（每个进程都有页目录，保存在寄存器cr3中，进程切换时，cr3也会换成新进程的页目录地址）中找到一项，即为页表的地址；利用中间10位在页表中查找一项，其值（应该需要左移12位）加上现象地址的低12位，就得到物理地址。​	![段页式管理机制](<https://github.com/shaohv/shaohv.resources/raw/master/linux_os_address_mapping.png>)
 
 ​	注意：
 
@@ -39,7 +37,7 @@ struct free_area {
 
 ​	每个元素是链表头，第0个元素链表中，包含的是2^0个页框，以此类推。
 
-![](<http://edsionte.com/techblog/wordpress/wp-content/uploads/2012/03/buddy.jpeg>)
+![](<https://github.com/shaohv/shaohv.resources/raw/master/linux_os_buddy.png>)
 
 ​	[分配与释放](<https://www.cnblogs.com/cherishui/p/4246133.html>)：例如现在仅存需要分配8K的物理内存，系统首先从8K那个链表中查询有无可分配的内存，若有直接分配；否则查找16K大小的链表，若有，首先将16K一分为二，将其中一个分配给进程，另一个插入8K的链表中，若无，继续查找32K，若有，首先把32K一分为二，其中一个16K大小的内存插入16K链表中，然后另一个16K继续一分为二，将其中一个插入8K的链表中，另一个分配给进程........以此类推。当内存释放时，查看相邻内存有无空闲，若存在两个联系的8K的空闲内存，直接合并成一个16K的内存，插入16K链表中。
 
@@ -49,7 +47,7 @@ struct free_area {
 
 ​	伙伴系统主要分配大块内存（页框为单位），解决外部碎片问题，而slab主要解决内部碎片。工程中常用的空闲队列与其思路很相似，但绝非空闲队列那么简单。
 
-![](<https://www.ibm.com/developerworks/cn/linux/l-linux-slab-allocator/figure1.gif>)
+![image](<https://github.com/shaohv/shaohv.resources/raw/master/linux_os_slab.png>)
 
 ​	如上图所示，每个slab由一个或多个page物理内存构成，每个slab是一个对象数组；每组slab称作一个cache，在这些cache之上，有一个称作cache_chain的链表，将这些cache连接起来。
 
@@ -75,31 +73,124 @@ struct free_area {
 
 ### 进程、线程
 
-#### 创建、销毁
+#### 进程创建、退出
+
+**fork:** linux通过系统调用*clone()*实现了多个库函数，包括fork(),vfork()和clone()，它们的区别在于传递不同的标志给*clone()*。该系统调用主要完成下列四件事情：
+
+1. 分配内核数据结构给新的进程，如thread info；
+
+2. 拷贝父进程的部分数据结构内容至子进程，例如堆栈；
+
+3. 将子进程添加到任务列表中；
+
+4. 返回。
+
+   注意：为什么fork会在父子进程中各返回一次？
+
+**execve:** 加载并解析可执行文件，修改进程的代码段、数据段，并修改进程的堆栈，确保进程接下来执行新的程序逻辑。
+
+​	源码分析，可参见[fork+execve:一个进程的诞生](<https://blog.csdn.net/chengonghao/article/details/51334663>)
+
+**退出：** 进程退出有exit和_exit两个函数，前者比后者多做一些事情，例如将文件缓冲区写入文件等。c语言main函数return出去的值就是exit的参数。
+
+![image](<https://github.com/shaohv/shaohv.resources/raw/master/linux_os_exit.png>)
+
+了解这些库函数如何使用，可以阅读[实现一个简单的shell](https://www.cnblogs.com/tp-16b/p/9096838.html)。
+
+更多理论分析，参见[linux进程管理剖析](<https://www.ibm.com/developerworks/cn/linux/l-linux-process-management/>)，[Linux内核设计与实现-进程管理](<https://www.cnblogs.com/20135235my/p/5349711.html>)。
 
 #### 两者区别
 
+​	参见[linux进程与线程的区别](https://www.cnblogs.com/fah936861121/articles/8043187.html)。
+
 #### 任务调度
 
-#### 进程间同步
+​	包含三方面：**进程状态机、上下文切换和调度算法**。
 
-#### 互斥、死锁
+#### 同步、互斥
+
+​	进程间同步方式有：共享内存、消息队列、管道、信号量和socket等。
+
+​	线程间同步方式除上述几种外，还有条件变量、自旋锁、互斥锁、读写锁。
+
+​	同步与互斥有一定区别，前者主要用来控制时序，让多个进程或线程按照一定的逻辑来执行；互斥主要用来保护临界区，禁止多个线程同时操作。
+
+​	我接触到的项目中，条件变量和锁的应用比较多，例如进程启动时候，要做一些初始化，包括起一些业务线程等，这些业务线程创建出来之后并非立即执行，而是等待条件变量，进程在启动的最后阶段（一切初始化完成后），置上条件变量，各业务线程开始处理业务；另外，自旋锁、读写锁之类的，在多io业务线程进程用到。
+
+​	锁的实现中，一般都需要硬件支持，例如spin lock的实现，需要原子操作test_and_set来支持，基本逻辑如下:
+
+```c
+void spin_lock(int* lock_val){
+    int old_val = 0;
+    while((old_val = test_and_set(*lock_val,1) == 1)); //lock_val为0，表示lock没有空闲
+    return;
+}
+
+void spin_unlock(int* lock_val){
+    *lock_val = 0;
+    return;
+}
+```
+
+​	上面的代码在获取不到锁时，会让cpu一直空转，实际实现中，例如arm上，有一对ldrex,strex操作，ldrex将数据加载到寄存器中，strex将数据保存到内存中，在strex保存时，如果内存中，被其他执行路径（线程）改变过，将返回错误，参见[linux同步机制spin lock](<http://www.wowotech.net/kernel_synchronization/spinlock.html>)。
+
+​	更多关于锁的讨论，参见[Linux Futex浅析](<https://blog.csdn.net/mitushutong11/article/details/51336136>)，[Linux Futex的设计与实现](<https://blog.csdn.net/jianchaolv/article/details/7544316>)。
 
 #### 多线程题目
+
+#### 进程如何后台化
 
 ### 文件io
 
 #### 标准io与系统调用
 
-[图不错](<https://www.cnblogs.com/cherishui/p/4246822.html>)
+几篇参考文章：
 
-#### io调度算法
+源码分析参考：[Linux VFS与Read/Write系统调用](<https://www.cnblogs.com/Zachary-Fan/p/dborcachefirst.html>)，[linux read 系统调用剖析](https://www.cnblogs.com/tcicy/p/8454740.html)。
 
-### 网络io
+理论分析：[漫谈linux文件IO](https://www.cnblogs.com/alantu2018/p/8460061.html)
+
+文件操作需注意，缓存io与direct io的处理区别。
+
+另外，尽量结合自己的项目去理解文件io各个层面。
+
+#### 管道实现
+
+<https://www.cnblogs.com/tp-16b/p/8886378.html>
+
+### 网络
+
+#### 网络io模型
+
+[网络IO模型：同步IO和异步IO，阻塞IO和非阻塞IO](http://blog.chinaunix.net/uid-28458801-id-4464639.html)
+
+[linux下的io复用与epoll详解](<https://www.cnblogs.com/lojunren/p/3856290.html>)
+
+​	epoll机制在工程实践中用的非常多，这里结合项目仔细体会一下。
+
+#### linux网络栈
+
+[理解linux网络栈](<https://www.cnblogs.com/sammyliu/p/5225623.html>)
+
+#### 五层模型
+
+osi七层模型，tcp/ip五层模型（物理层、链路层、网络层、传输层和应用层）。
 
 #### 三握四挥
 
+[协议森林](<https://www.cnblogs.com/vamei/archive/2012/12/05/2802811.html>)
+
+三握四挥遇到**异常**怎么处理？例如，三次握手第三次丢包。
+
+[三次握手异常情况](<https://www.cnblogs.com/quehualin/p/10409607.html>)，[参考2](<https://www.jianshu.com/p/29868fb82890>)
+
 #### 收发包
+
+参考《linux内核源代码情景分析》的**基于socket的进程间通信**。
+
+#### http/https如何工作的
+
+#### 一次完整的通信
 
 ### 中断、异常
 
