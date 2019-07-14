@@ -107,6 +107,26 @@ struct free_area {
 
 ​	包含三方面：**进程状态机、上下文切换和调度算法**。
 
+##### 状态机
+
+​	通俗：运行态、就绪、阻塞
+
+​	详细：running(运行、就绪) 。。。 
+
+##### 调度算法
+
+​	[linux系统调度策略比较](https://blog.csdn.net/fchyang/article/details/79268204) , [linux完全公平调度粗略](http://c.biancheng.net/view/1255.html)
+
+​	CFS是不支持优先级的，其调度的依据是虚拟运行时间。cpu密集型任务更加倾向于用完分配到的时间片，而io密集型任务经常会因阻塞而放弃cpu，而给其他任务使用，这样的情形下，io密集型任务就是更加友好的。虚拟运行时间计算与任务的友好值反相关，这样有好值越高，其虚拟运行时间越低。
+
+​	cfs有好值是[-20, 19]，而linux系统实时策略（fifo, rr）的优先级是[0，99]。所有任务在一起调度时，会将cfs映射到[99,139]。
+
+​	linux目前默认的时候CFS(Completely Fair Schedual)，即我们使用pthread_create不指定policy时，创建出来的线程就是CFS的。
+
+​	
+
+
+
 #### 同步、互斥
 
 ​	进程间同步方式有：共享内存、消息队列、管道、信号量和socket等。
@@ -135,6 +155,41 @@ void spin_unlock(int* lock_val){
 ​	上面的代码在获取不到锁时，会让cpu一直空转，实际实现中，例如arm上，有一对ldrex,strex操作，ldrex将数据加载到寄存器中，strex将数据保存到内存中，在strex保存时，如果内存中，被其他执行路径（线程）改变过，将返回错误，参见[linux同步机制spin lock](<http://www.wowotech.net/kernel_synchronization/spinlock.html>)。
 
 ​	更多关于锁的讨论，参见[Linux Futex浅析](<https://blog.csdn.net/mitushutong11/article/details/51336136>)，[Linux Futex的设计与实现](<https://blog.csdn.net/jianchaolv/article/details/7544316>)。
+
+##### 利用mutex实现读写锁
+
+​	假设mutex锁为mutex_lock, mutex_unlock
+
+```c
+read_count = 0
+mutex_t write_mutex, read_count_mutex;
+
+void read_mutex_lock(){
+    mutex_lock(read_count_mutex);
+    if(read_count == 0){
+        read_count ++;
+        mutex_lock(write_mutex);
+    }
+    mutex_unlock(read_count_mutex);
+}
+
+void read_mutex_unlock(){
+    mutex_lock(read_count_mutex);
+    read_count--;
+    if(read_count == 0){
+        mutex_unlock(write_mutex);
+    }
+    mutex_unlock(read_count_mutex);
+}
+
+void write_mutex_lock(){
+    mutex_lock(write_mutex);
+}
+
+void write_mutex_unlock(){
+    mutex_unlock(write_mutex);
+}
+```
 
 #### 多线程题目
 
