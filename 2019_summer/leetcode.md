@@ -106,3 +106,81 @@ public:
 ```
 
 ​	官方题解才是DP的正规思路，先暴力 -> 画图 -> 记忆式搜索 -> DP
+
+### [Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/description/)
+
+​		c++ stl vector的new，二维数组用法
+
+解法一：暴力法
+
+```c++
+    // f(x) = max{arr{x} - arr{i}}, i = 0 ... x-1
+    // max profit = max(f(x), x = 1 ... arrsize -1 )
+int maxProfit(vector<int>& prices) {
+    if(prices.size() < 2) return -1;
+    vector<int> profit(prices.size());
+    int max_p = 0;
+
+
+    for(int i = 1; i < prices.size() - 1; i ++){
+        int max_profit = INT_MIN;
+        for(int j = 0; j < i; j++){
+            max_profit = max(max_profit, prices[i] - prices[j]);
+        }
+        profit[i] = max_profit;
+        max_p = max(max_p, profit[i]);
+    }
+
+    return max_p;
+}
+```
+
+解法二：一维DP
+
+```c++
+   // f(x) = max{arr{x} - arr{i}}, i = 0 ... x-1
+    // f(x+1) = max(f(x) + arr(x+1) - arr(x), arr(x+1) - arr(x))
+    // max profit = max(f(x), x = 1 ... arrsize -1 )
+    int maxProfit(vector<int>& prices) {
+        if(prices.size() < 2) return 0;
+        vector<int> profit(prices.size());
+        profit[0] = 0;
+        int max_p = 0;
+        
+        
+        for(int i = 1; i < prices.size(); i ++){
+            int t = prices[i] - prices[i-1];
+            profit[i] = max(profit[i-1] + t, t);
+            max_p = max(max_p, profit[i]);
+        }
+        
+        return max_p;
+    }
+```
+
+解法三：空间优化
+
+```c++
+    // f(x) = max{arr{x} - arr{i}}, i = 0 ... x-1
+    // f(x+1) = max(f(x) + arr(x+1) - arr(x), arr(x+1) - arr(x))
+    // max profit = max(f(x), x = 1 ... arrsize -1 )
+public:
+    int maxProfit(vector<int>& prices) {
+        if(prices.size() < 2) return 0;
+        int first = 0;
+        int second = 0;
+        int max_p = 0;
+        
+        
+        for(int i = 1; i < prices.size(); i ++){
+            int t = prices[i] - prices[i-1];
+            second = max(first + t, t);
+            first = second;
+            max_p = max(max_p, second);
+        }
+        
+        return max_p;
+    }
+```
+
+​		层层递进，首先是暴力法搜索，发现有重叠部分，再思考重叠部分关系（这一步最重要），最后优化空间。
