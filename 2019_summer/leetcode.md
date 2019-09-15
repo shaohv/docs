@@ -188,3 +188,34 @@ public:
 ### [Best Time to Buy and Sell Stock II](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/description/)
 
 ​	它是一道DP吗
+
+### [Reverse Words in a String III](https://leetcode.com/problems/reverse-words-in-a-string-iii/) : 属于基础套路题
+
+```java
+class Solution {
+    private void reverseCharArr(char[] cs, int left, int right){
+        while(left < right){
+            char t = cs[left];
+            cs[left] = cs[right];
+            cs[right] = t;
+            left ++; right --;
+        }
+    }
+    
+    public String reverseWords(String s) {
+        if(s.length() == 0) return s;
+        
+        char[] rs = s.toCharArray();
+        int begin = 0;
+        for(int i=0; i<rs.length; i++){
+            if(rs[i] == ' '){
+                reverseCharArr(rs, begin, i-1);
+                begin = i + 1;
+            }
+        }
+        reverseCharArr(rs, begin, rs.length - 1);       
+        return String.valueOf(rs);
+    }
+}
+```
+
