@@ -220,3 +220,129 @@ class Solution {
 ```
 
 ​		至此，腾讯50题，simple级别结束。
+
+### [Longest Palindromic Substring](https://leetcode.com/problems/longest-palindromic-substring)
+
+```c++
+class Solution {
+private:
+    bool helper(string& s, int i, int j){
+        while(i < j){
+            if(s[i]!= s[j]){
+                return false;
+            }
+            i++; j--;
+        }
+        
+        return true;
+    }
+public:
+    string longestPalindrome(string s) {
+        if(s.length() < 2) return s;
+        int left = 0;
+        int len = s.length();
+        int slen = 1;
+        bool found = false;
+        
+        for(; !found && (len > 0); len --){
+            for(int i = 0; i+len-1 < s.length(); i++){
+                if(helper(s, i, i+len-1)){
+                    left = i;
+                    slen = len;
+                    found = true;
+                    break;
+                }                
+            }
+        }
+        
+        return s.substr(left, slen);
+    }
+};
+```
+
+三层循环，即使题目限制了长度最大为1000，也time limit exceed.
+
+换一种搜索方式，对每一个元素，往两边搜索
+
+```cpp
+void helper(string& s, int left, int right, int& start, int& maxi){
+    if(s[left] != s[right]) return;
+    while(left > 0 && right < s.length()-1 && s[left-1] == s[right+1]){
+        left--; right ++;
+    }
+    
+    if(right - left + 1 > maxi){
+        start = left;
+        maxi = right - left + 1;
+    }
+    return;
+}
+
+string longestPalindrome(string s) {
+    int len = s.length();
+    if( len < 2 ) return s;
+    
+    int maxi = 1, start_idx = 0;
+    for(int i = 0; i < len; i++){
+        helper(s, i, i, start_idx, maxi);
+        helper(s, i, i+1, start_idx, maxi);
+    }
+    
+    return s.substr(start_idx, maxi);
+}
+```
+
+这就能满足时间要求。
+
+另外还有dp算法，你会写吗
+
+### [3sum](https://leetcode.com/problems/3sum)
+
+​	经典two pointer问题，[3sum closest](https://leetcode.com/problems/3sum-closest) 与3sum思路基本相似，细节处理作区分。
+
+### [Search in Rotated Sorted Array](https://leetcode.com/problems/search-in-rotated-sorted-array)
+
+​	这是一道经典binary search题目，只要能满足每次缩减一半搜索空间，我们首先都应该考虑二分。本题需注意sorted array旋转状态可能在搜索过程中消失。
+
+```
+public int search(int[] nums, int target) {
+    if(nums.length == 0) return -1;
+    
+    int left = 0, right = nums.length - 1;
+    while(left + 1 < right){
+        int mid = (left + right) / 2;
+        if(nums[mid] == target) return mid;
+        else{
+            if(nums[left] > nums[right]){
+                if(nums[left] < nums[mid]){
+                    if(target > nums[mid]) left = mid;
+                    else{
+                        if(target <= nums[nums.length - 1]) left = mid;
+                        else right = mid ;
+                    }
+                }
+                else{
+                    if(target < nums[mid]) right = mid;
+                    else{
+                        if(target >= nums[0]) right = mid;
+                        else left = mid;
+                    }
+                }    
+            }
+            else{
+                if(target > nums[mid]) left = mid;
+                else right = mid;
+            }
+        }
+    }
+    
+    if(nums[left] == target) return left;
+    if(nums[right] == target) return right;
+    return -1;
+}
+```
+
+
+
+
+
