@@ -107,7 +107,7 @@ public:
 
 ​	官方题解才是DP的正规思路，先暴力 -> 画图 -> 记忆式搜索 -> DP
 
-### [Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/description/)
+### [Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/description/):一维DP
 
 ​		c++ stl vector的new，二维数组用法
 
@@ -296,15 +296,15 @@ string longestPalindrome(string s) {
 
 另外还有dp算法，你会写吗
 
-### [3sum](https://leetcode.com/problems/3sum)
+### [3sum](https://leetcode.com/problems/3sum):Two pointer
 
 ​	经典two pointer问题，[3sum closest](https://leetcode.com/problems/3sum-closest) 与3sum思路基本相似，细节处理作区分。
 
-### [Search in Rotated Sorted Array](https://leetcode.com/problems/search-in-rotated-sorted-array)
+### [Search in Rotated Sorted Array](https://leetcode.com/problems/search-in-rotated-sorted-array):binary search
 
 ​	这是一道经典binary search题目，只要能满足每次缩减一半搜索空间，我们首先都应该考虑二分。本题需注意sorted array旋转状态可能在搜索过程中消失。
 
-```
+```java
 public int search(int[] nums, int target) {
     if(nums.length == 0) return -1;
     
@@ -342,7 +342,137 @@ public int search(int[] nums, int target) {
 }
 ```
 
+### [Multiply Strings](https://leetcode.com/problems/multiply-strings):细节题
 
+​	方法一：每次处理num1 * num2[x]，然后将结果相加到最终结果；
 
+​	方法二：每次处理num1[y]* nums2[x]，就将结果相加到最终结果，这是计算carray需计算两层，一层是相乘，一层是相加。
 
+```java
+public String multiply(String num1, String num2) {
+    if(num1.length() == 0 || num2.length() == 0) return "";
+    if(num1.charAt(0) == '0' || num2.charAt(0) == '0') return "0";
+    
+    char[] Res = new char[num1.length() + num2.length() + 1];
+    for(int i=0; i<Res.length; i++){
+        Res[i] = '0';
+    }
+    
+    for(int i=0; i<num2.length(); i++){       
+        // 计算num1 * num2[x]
+        int carray = 0, A = num2.charAt(num2.length() - 1 - i) - '0';
+        for(int j=0; j<num1.length(); j++){
+            int B = num1.charAt(num1.length() - 1 - j) - '0';
+            
+            int cur = ( A * B + carray )% 10;
+            carray = ( A * B + carray ) / 10 ;
+        
+            carray += (Res[Res.length-1-i - j] - '0' + cur) / 10;
+            Res[Res.length-1-i - j] =(char) ((Res[Res.length-1-i - j] - '0' + cur) % 10 + '0');
+        }
+        
+        Res[Res.length - 1 - i - num1.length()] = (char)(carray + '0');     
+    }
+    
+    int startIdx = 0 ;
+    while(startIdx < Res.length && Res[startIdx] == '0') startIdx++;
+    return new String(Res, startIdx, Res.length - startIdx);
+}
+```
+
+### [Permutations](https://leetcode.com/problems/permutations):backtracking 
+
+​	典型的backtracking
+
+### [Spiral Matrix](https://leetcode.com/problems/spiral-matrix):细节题
+
+​	这个题目虽然是细节题，但也有方法可循，下面两种写法对比：
+
+方法一：
+
+```java
+public List<Integer> spiralOrder(int[][] matrix) {
+    if(matrix.length == 0 || matrix[0].length == 0) return new ArrayList<Integer>();
+    int w = matrix[0].length, h = matrix.length;
+    int idx = 0;
+    
+    List<Integer> re = new ArrayList<Integer>();
+    
+    while(true){
+        boolean f = false;
+        
+        for(int i = 0 + idx; i <= w - 1- idx; i++){
+            if(idx <= h-1-idx){
+                re.add(matrix[idx][i]);
+                f = true;                 
+            }
+
+        }
+        
+        for(int i =1+ idx; i <= h - 1 - idx; i++){
+            if(idx <= w - 1 - idx){
+                re.add(matrix[i][w-1-idx]);
+                f = true;
+            }
+        }
+        
+        for(int i = w - 2 -idx; i >= idx ; i--){
+            if(h-1-idx > idx){
+                re.add(matrix[h-1-idx][i]);
+                f = true;                    
+            }
+        }
+        
+        for(int i = h - 2 - idx; i > idx; i --){
+            if(idx < w - 1 - idx){
+                re.add(matrix[i][idx]);
+                f = true;                  
+            }
+        }
+        
+        if(f == false) break;
+        idx ++;
+    }
+    //System.out.println("idx="+idx);
+    return re;
+}
+```
+
+方法二：
+
+```java
+public List<Integer> spiralOrder(int[][] matrix) {
+    if(matrix.length == 0 || matrix[0].length == 0) return new ArrayList<Integer>();
+    int w = matrix[0].length, h = matrix.length, t = w * h;
+    int idx = 0;
+    
+    List<Integer> re = new ArrayList<Integer>();
+
+    
+    while(re.size() < t){
+        
+        for(int i = 0 + idx; i <= w - 1 - idx; i++){
+            re.add(matrix[idx][i]);         
+        }
+        
+        for(int i =1+ idx; (re.size() < t) && i <= h - 1 - idx; i++){
+            re.add(matrix[i][w-1-idx]);
+        }
+        
+        for(int i = w - 2 -idx; (re.size() < t) && i >= idx ; i--){
+                re.add(matrix[h-1-idx][i]);                
+        }
+        
+        for(int i = h - 2 - idx; (re.size() < t) && i > idx; i --){
+                re.add(matrix[i][idx]);
+        }
+        
+        idx ++;
+    }
+    //System.out.println("idx="+idx);
+    return re;
+}
+```
+
+​	使用方法一，会多碰到一个问题，即元素可能添加重复了，所以每个for循环都会多一个if条件判断；使用方式二无此问题？
 
