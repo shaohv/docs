@@ -476,3 +476,66 @@ public List<Integer> spiralOrder(int[][] matrix) {
 
 ​	使用方法一，会多碰到一个问题，即元素可能添加重复了，所以每个for循环都会多一个if条件判断；使用方式二无此问题？
 
+### [Unique Paths](https://leetcode.com/problems/unique-paths):dp
+
+### [Subsets](https://leetcode.com/problems/subsets):backtracking
+
+​	这道题需注意List<List<Integer>>这种二维泛型用法。
+
+```java
+class Solution {
+    void helper(List<List<Integer>> re, List<Integer> tl, int[] nums, int idx){
+        re.add(new ArrayList<Integer>(tl));
+        
+        for(int i = idx; i<nums.length; i++){
+            tl.add(nums[i]);
+            helper(re, tl, nums, i+1);
+            tl.remove(tl.size()-1);
+        }
+    }
+    
+    public List<List<Integer>> subsets(int[] nums) {
+        List<List<Integer>> re = new ArrayList<List<Integer>>();
+        List<Integer> tl = new ArrayList<Integer>();
+        helper(re, tl, nums, 0);
+        return re;
+    }
+}
+```
+
+
+
+### [Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array)：priorityqueue, quickselect
+
+​	priorityQueue要会使用
+
+```java
+class Solution {
+    public int findKthLargest(int[] nums, int k) {
+        if(nums.length < k) return -1;
+        Queue<Integer> q = new PriorityQueue<>(
+            new Comparator<Integer>(){
+                public int compare(Integer a, Integer b){
+                    return a - b;
+                }
+            });
+        
+        for(int i = 0; i < nums.length; i++){
+            if(q.size() < k){
+                q.add(nums[i]);
+            }
+            else{
+                if(q.peek() < nums[i]){
+                    q.remove();
+                    q.add(nums[i]);
+                }
+            }
+        }
+        
+        return q.peek();
+    }
+}
+```
+
+​	quickselect 也必须掌握的一种思想。
+
