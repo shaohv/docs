@@ -539,3 +539,67 @@ class Solution {
 
 ​	quickselect 也必须掌握的一种思想。
 
+### [Kth Smallest Element in a BST](https://leetcode.com/problems/kth-smallest-element-in-a-bst): binary search tree
+
+​	这道题最容易想到的是前序遍历，
+
+```java
+class Solution {
+    public int kthSmallest(TreeNode root, int k) {
+        Stack<TreeNode> st = new Stack<TreeNode>();
+        
+        TreeNode p = root;
+        int idx = 0;
+        
+        while(null != p || !st.empty()){
+            while(null != p){
+                st.push(p);
+                p = p.left;
+            }
+                
+            p = st.pop();
+            if(idx + 1 == k) {
+                return p.val;
+            }
+            
+            idx ++;
+            p = p.right;
+        }
+        
+        return 0;
+    }
+}
+```
+
+[优秀写法](https://leetcode.com/problems/kth-smallest-element-in-a-bst/discuss/63660/3-ways-implemented-in-JAVA-(Python):-Binary-Search-in-order-iterative-and-recursive)
+
+### [Lowest Common Ancestor of a Binary Tree](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree) : binaery tree
+
+​	递归方法写出来，效率极低
+
+```java
+class Solution {    
+    boolean contain(TreeNode root, TreeNode p){
+        if(null == root) return false;
+        if(root.val == p.val) return true;
+        
+        return (contain(root.left, p) || contain(root.right, p));
+    }
+    
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        while(true){
+            if(root.val == p.val || root.val == q.val) return root;
+            
+            boolean lp = contain(root.left, p);
+            boolean rp = contain(root.right, p);
+            boolean lq = contain(root.left, q);
+            boolean rq = contain(root.right, q);            
+            
+            if(lp && rq || rp && lq) return root;
+            else if(lp && lq) root = root.left;
+            else root = root.right;
+        }
+    }
+}
+```
+
