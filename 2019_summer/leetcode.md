@@ -603,3 +603,35 @@ class Solution {
 }
 ```
 
+## [Bit Manipulation](https://leetcode.com/tag/bit-manipulation/)
+
+### [Single Number](https://leetcode.com/problems/single-number): 异或
+
+​	[Single Number II](https://leetcode.com/problems/single-number-ii),[Single Number III](https://leetcode.com/problems/single-number-iii) 这两道题却很难理解；
+
+​	[Missing Number](https://leetcode.com/problems/missing-number)这道题与Single Number思想一致。
+
+### [Majority Element](https://leetcode.com/problems/majority-element)
+
+​	这道题思路很特别，先假设满足条件，再去验证。
+
+### [Power of Two](https://leetcode.com/problems/power-of-two): n & (n-1) == 0
+
+​	这个方法在代码中经常用
+
+### [Repeated DNA Sequences](https://leetcode.com/problems/repeated-dna-sequences): HashMap思想
+
+​	但是在考虑效率时，可以找找规律，避免使用String作为key比较低效。
+
+### [Convert a Number to Hexadecimal](https://leetcode.com/problems/convert-a-number-to-hexadecimal)
+​	注意要考虑有符号数移位操作
+
+## [Sliding Window](https://leetcode.com/tag/sliding-window/)
+
+​	这下面主要就是Medium和hard级别的题目。
+
+### [Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters)
+
+​	划窗思想很巧妙，一般能解决线性时间复杂度
+
+### [Longest Repeating Character Replacement](https://leetcode.com/problems/longest-repeating-character-replacement)
