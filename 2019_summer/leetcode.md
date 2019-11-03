@@ -635,3 +635,182 @@ class Solution {
 ​	划窗思想很巧妙，一般能解决线性时间复杂度
 
 ### [Longest Repeating Character Replacement](https://leetcode.com/problems/longest-repeating-character-replacement)
+
+
+
+## [Backtracking](https://leetcode.com/tag/backtracking/)
+
+​	回溯法有很强的套路，基本作会一两道题目，其他都可以解决；当回溯法遇到去重时，有一些难度。
+
+### [Generate Parenthese](https://leetcode.com/problems/generate-parentheses/description/)
+
+​	这道题如果没有想清楚，实际不太好写，下面的解法一和解法二就有很到差距。
+
+- 解法一
+
+```java
+class Solution {
+    void helper(List<String> r, int n, int left, int right,  StringBuilder sb){
+        if(n == right){
+            r.add(sb.toString());
+            return;
+        }
+        
+        if(left < n ) {
+            sb.append(String.valueOf('('));
+            left ++ ;
+            
+            for(int i =0; i<=left - right; i++){
+
+                for(int j=0; j<i; j++)
+                    sb.append(String.valueOf(')'));
+
+                helper(r, n, left, right + i, sb);
+
+                if( i != 0 ) sb.delete(sb.length()-i, sb.length());
+            }
+            
+            sb.delete(sb.length()-1, sb.length());
+        }
+    }
+    
+    public List<String> generateParenthesis(int n) {
+        List<String> r = new ArrayList<String>();
+        
+        if( n == 0 ) {
+            r.add(new String(""));
+            return r;
+        }
+        
+        helper(r, n, 0, 0, new StringBuilder());
+        return r;
+    }
+}
+```
+
+- 解法二
+
+```java
+class Solution {
+    int len = 0;
+    
+    public List<String> generateParenthesis(int n) {
+        List<String> results = new ArrayList<>();
+        char[] result = new char[n * 2];
+        this.len = n;
+        dfs(results, result, n, n);
+        return results;
+    }
+    
+    private void dfs(List<String> results, 
+                     char[] result,
+                     int left,
+                     int right) {
+        if ( 0 == right) {
+            results.add(new String(result));
+            return;
+        }
+        
+        if ( left > 0) {
+            result[this.len * 2 - left - right] = '(';
+            dfs(results, result, left - 1, right);
+        }
+        if (right > 0 && right > left) {      
+            result[this.len * 2 - left - right] = ')';
+            dfs(results, result, left, right - 1);
+        }
+        return;
+    }
+}
+```
+
+### [Combination Sum II](https://leetcode.com/problems/combination-sum-ii): 去重
+
+```java
+class Solution {   
+    void helper(int[] candi, List<List<Integer>> r, List<Integer> list, int tgt, int sum, int idx){
+        if( sum == tgt ){
+            // r.add(list); 将当前对象加入，会有问题
+            r.add(new ArrayList<Integer>(list));
+            return;
+        }
+        if( sum > tgt ) return;
+        
+        for(int i = idx; i < candi.length; i ++){
+            if(candi[i] >  tgt) return;
+            
+            /*if(i > 0 && candi[i] == candi[i-1]){
+                if(list.size()==0
+                  || (candi[i] != list.get(list.size()-1)) )
+                    continue;
+            }*/
+            
+            /*if((list.size() > 0 && i > 0
+              && candi[i] == candi[i-1]
+              && candi[i] != list.get(list.size()-1))
+              || (list.size()==0 && i > 0
+                 && candi[i] == candi[i-1]) ){
+                continue;
+            }*/
+            
+            if( i > idx && candi[i] == candi[i-1] ) 
+                continue;
+            
+            list.add(candi[i]);
+            helper(candi, r, list, tgt, sum + candi[i], i+1);
+            list.remove(list.size()-1);             
+        }
+      
+    }
+    
+    public List<List<Integer>> combinationSum2(int[] candidates, int target) {
+        List<List<Integer>> r = new ArrayList<List<Integer>>();
+        
+        if( candidates.length == 0 ) return r;
+        Arrays.sort(candidates);
+        
+        helper(candidates, r, new ArrayList<Integer>(), target, 0, 0);
+        
+        return r;
+    }    
+}
+```
+
+### [Permutations II](https://leetcode.com/problems/permutations-ii) : used数组去重
+
+### [Subsets II](https://leetcode.com/problems/subsets-ii) : used数组去重
+
+```java
+class Solution {
+    void helper(int[] nums, List<List<Integer>> re, List<Integer> li, int idx, boolean[] used){
+        re.add(new ArrayList<Integer>(li));
+        
+        for(int i = idx; i < nums.length; i++){
+            
+            if(i > 0 && !used[i-1] && nums[i] == nums[i-1]) continue;
+            
+            used[i] = true;
+            li.add(nums[i]);
+            
+            helper(nums, re, li, i + 1, used);
+            
+            li.remove(li.size()-1);
+            used[i] = false;
+        }
+    }
+    
+    public List<List<Integer>> subsetsWithDup(int[] nums) {
+        
+        List<List<Integer>> re = new ArrayList<List<Integer>>();
+        
+        if(nums.length == 0) return re;
+        
+        boolean[] used = new boolean[nums.length];
+        Arrays.sort(nums);
+        helper(nums, re, new ArrayList<Integer>(), 0, used);
+        
+        return re;
+    }
+}
+```
+
